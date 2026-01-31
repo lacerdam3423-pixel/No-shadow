@@ -1,30 +1,53 @@
+-- Delta Executor: NoShadow + Textures Brightness + Minecraft Floor
+
+-- Evita loops pesados para celulares
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
+local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
-Lighting.GlobalShadows = false
-Lighting.Brightness = 2
-Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
-
-local function removeShadowsAndEnhance(part)
-    if part:IsA("BasePart") then
-        part.CastShadow = false
-        part.Reflectance = 0
-        part.Material = part.Material
-        if part:FindFirstChildOfClass("Texture") then
-            for _, tex in ipairs(part:GetChildren()) do
-                if tex:IsA("Texture") then
-                    tex:Destroy()
-                end
-            end
-        end
-        part.Color = part.Color
+-- Função para aplicar NoShadow e brilho nas texturas
+local function applyNoShadow(obj)
+    if obj:IsA("BasePart") then
+        obj.CastShadow = false          -- remove sombra
+        obj.Material = obj.Material     -- mantém textura original
+        obj.Reflectance = 0.05          -- brilho leve
+        obj.StudsPerTileU = obj.Size.X -- evita repetição da textura
+        obj.StudsPerTileV = obj.Size.Z
+    end
+    for _, child in pairs(obj:GetChildren()) do
+        applyNoShadow(child)
     end
 end
 
-RunService.RenderStepped:Connect(function()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        removeShadowsAndEnhance(obj)
+-- Aplica NoShadow a todos os objetos do Workspace
+applyNoShadow(Workspace)
+
+-- Configurações de iluminação
+Lighting.GlobalShadows = false      -- remove todas as sombras
+Lighting.Brightness = 2             -- brilho geral das texturas
+Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200) -- remove escuro
+Lighting.FogEnd = 100000            -- sem neblina
+Lighting.FogStart = 0
+
+-- Ajuste do chão estilo Minecraft
+if Terrain then
+    Terrain.WaterWaveSize = 0       -- sem ondulações
+    Terrain.WaterWaveSpeed = 0
+    Terrain.WaterReflectance = 0
+    Terrain.WaterTransparency = 0.5
+    Terrain.FillMaterial = Enum.Material.Grass -- mantém visual original
+    Terrain.WaterColor = Color3.fromRGB(180, 180, 255)
+end
+
+-- Remove efeitos indesejados (Bloom, Neon, etc.)
+local LightingEffects = {"BloomEffect", "SunRaysEffect", "ColorCorrectionEffect"}
+for _, effectName in pairs(LightingEffects) do
+    local effect = Lighting:FindFirstChild(effectName)
+    if effect then
+        effect:Destroy()
     end
-end)
+end
+
+-- Mensagem opcional leve
+print("Delta Executor: NoShadow e brilho aplicado com sucesso.")
