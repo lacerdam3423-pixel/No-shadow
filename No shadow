@@ -1,0 +1,30 @@
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+Lighting.GlobalShadows = false
+Lighting.Brightness = 2
+Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+
+local function removeShadowsAndEnhance(part)
+    if part:IsA("BasePart") then
+        part.CastShadow = false
+        part.Reflectance = 0
+        part.Material = part.Material
+        if part:FindFirstChildOfClass("Texture") then
+            for _, tex in ipairs(part:GetChildren()) do
+                if tex:IsA("Texture") then
+                    tex:Destroy()
+                end
+            end
+        end
+        part.Color = part.Color
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        removeShadowsAndEnhance(obj)
+    end
+end)
